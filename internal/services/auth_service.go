@@ -1,13 +1,21 @@
 package services
 
 import (
+	"context"
 	"time"
+	"uuid"
 
-	"github.com/benianus/gymus-go/internal/config"
+	. "github.com/benianus/gymus-go/internal/config"
 )
 
 type AuthService struct {
-	*config.ApiConfig
+	*ApiConfig
+}
+
+func NewAuthService(cfg *ApiConfig) *AuthService {
+	return &AuthService{
+		ApiConfig: cfg,
+	}
 }
 
 type LoginRequestDto struct {
@@ -16,27 +24,43 @@ type LoginRequestDto struct {
 }
 
 type AuthResponseDto struct {
-	Username     string
-	Role         string
-	ExpiresIn    time.Time
-	AccessToken  string
-	RefreshToken string
+	Username     string    `json:"username"`
+	Role         string    `json:"role"`
+	ExpiresIn    time.Time `json:"expires_in"`
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
 }
 
-type RegisterRequestDto struct{}
-type RefreshRequestDto struct{}
-type LogoutRequestDto struct{}
-type RefreshResponseDto struct{}
-
-type AuthInterface interface {
-	Login(LoginRequestDto) (AuthResponseDto, error)
-	Register(RegisterRequestDto) (AuthResponseDto, error)
-	Refresh(RefreshRequestDto) (RefreshResponseDto, error)
-	Logout(LogoutRequestDto) error
+type RegisterRequestDto struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+type RefreshRequestDto struct {
+	Username     string `json:"username"`
+	RefreshToken string `json:"refresh_token"`
+}
+type LogoutRequestDto struct {
+	Username     string `json:"username"`
+	RefreshToken string `json:"refresh_token"`
+}
+type RefreshResponseDto struct {
+	Username     string `json:"username"`
+	RefreshToken string `json:"refresh_token"`
 }
 
-func (auth *AuthService) Login(loginRequestDto LoginRequestDto) (AuthResponseDto, error) {
-	return AuthResponseDto{}, nil
+func (auth *AuthService) Login(loginRequestDto LoginRequestDto) (*AuthResponseDto, error) {
+	user, err := auth.GetUserByUsername(context.Background(), loginRequestDto.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthResponseDto{
+		Username:     user.Username,
+		Role:         user.Role,
+		ExpiresIn:    time.Now().Add(time.Hour),
+		AccessToken:  uuid.NewV7().String(),
+		RefreshToken: uuid.NewV7().String(),
+	}, nil
 }
 
 func (auth *AuthService) Register(registerRequestDto RegisterRequestDto) (AuthResponseDto, error) {

@@ -7,3 +7,9 @@ import (
 type MembershipService struct {
 	*config.ApiConfig
 }
+
+func NewMembershipService(cfg *config.ApiConfig) *MembershipService {
+	return &MembershipService{
+		ApiConfig: cfg,
+	}
+}

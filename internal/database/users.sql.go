@@ -49,3 +49,30 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]GetAllUsersRow, error) {
 	}
 	return items, nil
 }
+
+const getUserByUsername = `-- name: GetUserByUsername :one
+select id, username, role, created_at, updated_at
+from users
+where username = $1
+`
+
+type GetUserByUsernameRow struct {
+	ID        pgtype.UUID
+	Username  string
+	Role      string
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
+func (q *Queries) GetUserByUsername(ctx context.Context, username string) (GetUserByUsernameRow, error) {
+	row := q.db.QueryRow(ctx, getUserByUsername, username)
+	var i GetUserByUsernameRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
