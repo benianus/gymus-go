@@ -1,19 +1,24 @@
 package main
 
 import (
+	"encoding/json/v2"
 	"log"
 	"net/http"
 
-	_ "github.com/jackc/pgx"
+	"github.com/go-playground/validator/v10"
 
 	"github.com/benianus/gymus-go/internal/config"
-	"github.com/benianus/gymus-go/internal/handlers"
 	"github.com/benianus/gymus-go/internal/routers"
-	"github.com/benianus/gymus-go/internal/services"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
-	cfg := config.ApiConfig{}
+	// initialize single instance of validator
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
+	cfg := &config.ApiConfig{
+		Validate: validate,
+	}
 
 	/**
 	 * load environement variables
@@ -26,30 +31,24 @@ func main() {
 	/**
 	 * initilize database
 	 */
-	if err := cfg.LoadDatabase(); err != nil {
+	db, err := cfg.LoadDatabase()
+	if err != nil {
 		log.Fatal(err)
 		return
 	}
-
+	defer db.Close()
 	/**
 	* initilize server
 	* routing & handlers
 	 */
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		json.MarshalWrite(w, map[string]string{"message": "Hello, World!"})
+	})
+
 	// Auth
-	authService := services.NewAuthService(&cfg)
-	authHandler := handlers.NewAuthHandler(authService)
-	authRouter := routers.NewAuthRouter(authHandler)
-
-	authRouter.Router(mux)
-
-	// Memberships
-	mebershipService := services.NewMembershipService(&cfg)
-	membershipHandler := handlers.NewMembershipHandler(mebershipService)
-	membershipRouter := routers.NewMembershipRouter(membershipHandler)
-
-	membershipRouter.Router(mux)
+	routers.Router(cfg, mux)
 	/**
 	 * initialize server
 	 */

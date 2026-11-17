@@ -2,75 +2,97 @@ package services
 
 import (
 	"context"
+	"log"
 	"time"
-	"uuid"
 
-	. "github.com/benianus/gymus-go/internal/config"
+	"github.com/benianus/gymus-go/internal/auth"
+	"github.com/benianus/gymus-go/internal/config"
+	"github.com/benianus/gymus-go/internal/database"
+	. "github.com/benianus/gymus-go/internal/dtos"
+	"github.com/google/uuid"
 )
 
 type AuthService struct {
-	*ApiConfig
+	*config.ApiConfig
 }
 
-func NewAuthService(cfg *ApiConfig) *AuthService {
+func NewAuthService(cfg *config.ApiConfig) *AuthService {
 	return &AuthService{
 		ApiConfig: cfg,
 	}
 }
 
-type LoginRequestDto struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type AuthResponseDto struct {
-	Username     string    `json:"username"`
-	Role         string    `json:"role"`
-	ExpiresIn    time.Time `json:"expires_in"`
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token"`
-}
-
-type RegisterRequestDto struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-type RefreshRequestDto struct {
-	Username     string `json:"username"`
-	RefreshToken string `json:"refresh_token"`
-}
-type LogoutRequestDto struct {
-	Username     string `json:"username"`
-	RefreshToken string `json:"refresh_token"`
-}
-type RefreshResponseDto struct {
-	Username     string `json:"username"`
-	RefreshToken string `json:"refresh_token"`
-}
-
-func (auth *AuthService) Login(loginRequestDto LoginRequestDto) (*AuthResponseDto, error) {
-	user, err := auth.GetUserByUsername(context.Background(), loginRequestDto.Username)
+func (s *AuthService) Login(req LoginRequestDto) (*AuthResponseDto, error) {
+	user, err := s.GetUserByUsername(context.Background(), req.Username)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
+
+	isValid, err := auth.CheckPasswordHash(req.Password, user.Password)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	if !isValid {
+		log.Println(err)
+		return nil, err
+	}
+
+	accessToken, err := auth.MakeJwt(uuid.MustParse(user.ID.String()), s.SecretKey, time.Hour)
+	refreshToken, err := auth.MakeRefreshToken()
 
 	return &AuthResponseDto{
 		Username:     user.Username,
 		Role:         user.Role,
 		ExpiresIn:    time.Now().Add(time.Hour),
-		AccessToken:  uuid.NewV7().String(),
-		RefreshToken: uuid.NewV7().String(),
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 }
 
-func (auth *AuthService) Register(registerRequestDto RegisterRequestDto) (AuthResponseDto, error) {
-	return AuthResponseDto{}, nil
+func (s *AuthService) Register(registerRequestDto RegisterRequestDto, ctx context.Context) (*AuthResponseDto, error) {
+	// save the password hashed
+	hasehdPassword, err := auth.HashPassword(registerRequestDto.Password)
+	if err != nil {
+		return nil, err
+	}
+	newUser, err := s.CreateUser(ctx, database.CreateUserParams{
+		ID:        uuid.New(),
+		Username:  registerRequestDto.Username,
+		Password:  hasehdPassword,
+		Role:      "OWNER",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	accessToken, err := auth.MakeJwt(newUser.ID, s.SecretKey, time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, err := auth.MakeRefreshToken()
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthResponseDto{
+		Username:     newUser.Username,
+		Role:         newUser.Password,
+		ExpiresIn:    time.Now().Add(7),
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
 
-func (auth *AuthService) Refresh(refreshRequestDto RefreshRequestDto) (RefreshResponseDto, error) {
+func (s *AuthService) Refresh(refreshRequestDto RefreshRequestDto) (RefreshResponseDto, error) {
 	return RefreshResponseDto{}, nil
 }
 
-func (auth *AuthService) Logout(logoutRequestDto LogoutRequestDto) error {
+func (s *AuthService) Logout(logoutRequestDto LogoutRequestDto) error {
 	return nil
 }

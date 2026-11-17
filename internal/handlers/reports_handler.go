@@ -6,8 +6,8 @@ type ReportsHandler struct {
 	*services.ReportsService
 }
 
-func NewReportsService(service *services.ReportsService) *ReportsHandler {
+func NewReportHandler(s *services.ReportsService) *ReportsHandler {
 	return &ReportsHandler{
-		ReportsService: service,
+		ReportsService: s,
 	}
 }

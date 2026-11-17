@@ -7,9 +7,46 @@ package database
 
 import (
 	"context"
+	"time"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
+
+const createUser = `-- name: CreateUser :one
+insert into users (id, username, password, role, created_at, updated_at)
+values ($1, $2, $3, $4, $5, $6)
+returning id, username, password, role, created_at, updated_at
+`
+
+type CreateUserParams struct {
+	ID        uuid.UUID
+	Username  string
+	Password  string
+	Role      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, createUser,
+		arg.ID,
+		arg.Username,
+		arg.Password,
+		arg.Role,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Password,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
 
 const getAllUsers = `-- name: GetAllUsers :many
 select id, username, role, created_at, updated_at
@@ -17,15 +54,15 @@ from users
 `
 
 type GetAllUsersRow struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Username  string
 	Role      string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (q *Queries) GetAllUsers(ctx context.Context) ([]GetAllUsersRow, error) {
-	rows, err := q.db.Query(ctx, getAllUsers)
+	rows, err := q.db.QueryContext(ctx, getAllUsers)
 	if err != nil {
 		return nil, err
 	}
@@ -44,32 +81,47 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]GetAllUsersRow, error) {
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 	return items, nil
 }
 
+const getUserById = `-- name: GetUserById :one
+select id, username, password, role, created_at, updated_at
+from users
+`
+
+func (q *Queries) GetUserById(ctx context.Context) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserById)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Password,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUserByUsername = `-- name: GetUserByUsername :one
-select id, username, role, created_at, updated_at
+select id, username, password, role, created_at, updated_at
 from users
 where username = $1
 `
 
-type GetUserByUsernameRow struct {
-	ID        pgtype.UUID
-	Username  string
-	Role      string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
-}
-
-func (q *Queries) GetUserByUsername(ctx context.Context, username string) (GetUserByUsernameRow, error) {
-	row := q.db.QueryRow(ctx, getUserByUsername, username)
-	var i GetUserByUsernameRow
+func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
+	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
+		&i.Password,
 		&i.Role,
 		&i.CreatedAt,
 		&i.UpdatedAt,

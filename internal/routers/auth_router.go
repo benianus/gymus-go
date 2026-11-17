@@ -10,31 +10,21 @@ type AuthRouter struct {
 	*handlers.AuthHandler
 }
 
-func NewAuthRouter(authHandler *handlers.AuthHandler) *AuthRouter {
+func NewAuthRouter(h *handlers.AuthHandler) *AuthRouter {
 	return &AuthRouter{
-		AuthHandler: authHandler,
+		AuthHandler: h,
 	}
 }
 
-func (route *AuthRouter) Router(mux *http.ServeMux) {
-	
-	// membershipHandlers := MembershipHandlers(cfg)
+func (r *AuthRouter) Router(mux *http.ServeMux) {
+
 	/*
 	 * auth
 	 */
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, World!"))
-	})
-	mux.HandleFunc("POST /api/auth/login", route.HandlerLogin)
-	mux.HandleFunc("POST /api/auth/register", route.HandlerRegister)
-	mux.HandleFunc("POST /api/auth/refresh", route.HandlerRefresh)
-	mux.HandleFunc("POST /api/auth/logout", route.HandlerLogout)
-	/**
-	 * store
-	 */
 
-	/**
-	 * reports
-	 */
+	mux.HandleFunc("POST /api/auth/login", r.HandlerLogin)
+	mux.HandleFunc("POST /api/auth/register", r.HandlerRegister)
+	mux.HandleFunc("POST /api/auth/refresh", r.HandlerRefresh)
+	mux.HandleFunc("POST /api/auth/logout", r.HandlerLogout)
 
 }

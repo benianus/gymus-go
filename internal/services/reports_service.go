@@ -6,7 +6,7 @@ type ReportsService struct {
 	*config.ApiConfig
 }
 
-func NewReportsHandler(cfg *config.ApiConfig) *ReportsService {
+func NewReportService(cfg *config.ApiConfig) *ReportsService {
 	return &ReportsService{
 		ApiConfig: cfg,
 	}

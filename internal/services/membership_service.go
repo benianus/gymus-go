@@ -13,3 +13,4 @@ func NewMembershipService(cfg *config.ApiConfig) *MembershipService {
 		ApiConfig: cfg,
 	}
 }
+

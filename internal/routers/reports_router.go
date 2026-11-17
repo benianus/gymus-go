@@ -1,6 +1,8 @@
 package routers
 
 import (
+	"net/http"
+
 	"github.com/benianus/gymus-go/internal/handlers"
 )
 
@@ -8,8 +10,12 @@ type ReportsRouter struct {
 	*handlers.ReportsHandler
 }
 
-func NewReportsRouter(handler *handlers.ReportsHandler) *ReportsRouter {
+func NewReportsRouter(h *handlers.ReportsHandler) *ReportsRouter {
 	return &ReportsRouter{
-		ReportsHandler: handler,
+		ReportsHandler: h,
 	}
+}
+
+func (r *ReportsRouter) Router(mux *http.ServeMux) {
+    
 }

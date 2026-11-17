@@ -10,9 +10,9 @@ type MembershipHandler struct {
 	*services.MembershipService
 }
 
-func NewMembershipHandler(service *services.MembershipService) *MembershipHandler {
+func NewMembershipHandler(s *services.MembershipService) *MembershipHandler {
 	return &MembershipHandler{
-		MembershipService: service,
+		MembershipService: s,
 	}
 }
 

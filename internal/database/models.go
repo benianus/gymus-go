@@ -5,132 +5,135 @@
 package database
 
 import (
-	"github.com/jackc/pgx/v5/pgtype"
+	"database/sql"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type Member struct {
-	ID          pgtype.UUID
+	ID          uuid.UUID
 	FirstName   string
 	LastName    string
-	Birthdate   pgtype.Date
+	Birthdate   time.Time
 	Email       string
 	PhoneNumber string
 	Address     string
-	CreatedBy   pgtype.UUID
-	CreatedAt   pgtype.Timestamp
-	UpdatedAt   pgtype.Timestamp
+	CreatedBy   uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type MemberAttendance struct {
-	ID        pgtype.UUID
-	MemberID  pgtype.UUID
-	CreatedBy pgtype.UUID
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	ID        uuid.UUID
+	MemberID  uuid.UUID
+	CreatedBy uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type MemberDocument struct {
-	ID                    pgtype.UUID
+	ID                    uuid.UUID
 	BirthCertificate      string
 	MedicalCertificate    string
 	PersonalPhoto         string
-	ParentalAuthorization pgtype.Text
-	MemberID              pgtype.UUID
-	AddedBy               pgtype.UUID
-	CreatedAt             pgtype.Timestamp
-	UpdatedAt             pgtype.Timestamp
+	ParentalAuthorization sql.NullString
+	MemberID              uuid.UUID
+	AddedBy               uuid.UUID
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
 }
 
 type MembersCard struct {
-	ID           pgtype.UUID
-	MemberID     pgtype.UUID
-	MembershipID pgtype.UUID
-	CreatedBy    pgtype.UUID
-	CreatedAt    pgtype.Timestamp
-	UpdatedAt    pgtype.Timestamp
+	ID           uuid.UUID
+	MemberID     uuid.UUID
+	MembershipID uuid.UUID
+	CreatedBy    uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 type Membership struct {
-	ID               pgtype.UUID
-	MemberID         pgtype.UUID
-	StartDate        pgtype.Date
-	EndDate          pgtype.Date
-	MembershipTypeID pgtype.UUID
-	CreatedBy        pgtype.UUID
-	CreatedAt        pgtype.Timestamp
-	UpdatedAt        pgtype.Timestamp
+	ID               uuid.UUID
+	MemberID         uuid.UUID
+	StartDate        sql.NullTime
+	EndDate          sql.NullTime
+	MembershipTypeID uuid.UUID
+	CreatedBy        uuid.UUID
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 type MembershipRenewal struct {
-	ID           pgtype.UUID
-	MemberID     pgtype.UUID
-	MembershipID pgtype.UUID
-	CreatedBy    pgtype.UUID
-	CreatedAt    pgtype.Timestamp
-	UpdatedAt    pgtype.Timestamp
+	ID           uuid.UUID
+	MemberID     uuid.UUID
+	MembershipID uuid.UUID
+	CreatedBy    uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 type MembershipType struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Name      string
-	Price     pgtype.Numeric
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	Price     string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type Product struct {
-	ID                 pgtype.UUID
+	ID                 uuid.UUID
 	ProductName        string
 	ProductDescription string
 	ProductImage       string
 	Quantity           int32
-	Price              pgtype.Numeric
-	AddedBy            pgtype.UUID
-	CreatedAt          pgtype.Timestamp
-	UpdatedAt          pgtype.Timestamp
+	Price              string
+	AddedBy            uuid.UUID
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
 }
 
 type RefreshToken struct {
 	Token     string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
-	UserID    pgtype.UUID
-	ExpiresAt pgtype.Timestamp
-	RevokedAt pgtype.Timestamp
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	UserID    uuid.UUID
+	ExpiresAt sql.NullTime
+	RevokedAt sql.NullTime
 }
 
 type Sale struct {
-	ID         pgtype.UUID
-	ProductID  pgtype.UUID
+	ID         uuid.UUID
+	ProductID  uuid.UUID
 	Quantity   int32
-	TotalPrice pgtype.Numeric
-	MadeBy     pgtype.UUID
-	CreatedAt  pgtype.Timestamp
-	UpdatedAt  pgtype.Timestamp
+	TotalPrice string
+	MadeBy     uuid.UUID
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type Session struct {
-	ID            pgtype.UUID
+	ID            uuid.UUID
 	FullName      string
-	SessionTypeID pgtype.UUID
-	CreatedBy     pgtype.UUID
-	CreatedAt     pgtype.Timestamp
-	UpdatedAt     pgtype.Timestamp
+	SessionTypeID uuid.UUID
+	CreatedBy     uuid.UUID
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 type SessionType struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Name      string
-	Price     pgtype.Numeric
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	Price     string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type User struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Username  string
 	Password  string
 	Role      string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

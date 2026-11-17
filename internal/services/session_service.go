@@ -11,3 +11,7 @@ func NewSessionService(cfg *config.ApiConfig) *SessionService {
 		ApiConfig: cfg,
 	}
 }
+
+func (s *SessionService) GetAllSessions() {}
+
+func (s *SessionService) CreateSession() {}

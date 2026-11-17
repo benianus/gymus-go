@@ -1,11 +1,11 @@
 package config
 
 import (
-	"context"
+	"database/sql"
 	"os"
 
 	"github.com/benianus/gymus-go/internal/database"
-	"github.com/jackc/pgx/v5"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
 
@@ -17,36 +17,44 @@ type ApiConfig struct {
 type EnvironemntVariables struct {
 	Port      string
 	DbUrl     string
-	SecretKey string
 	Platform  string
+	SecretKey string
+	Issuer    string
+	Audience  string
+	Validate  *validator.Validate
 }
 
 func (cfg *ApiConfig) LoadEnvVariables() error {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("../.env"); err != nil {
 		return err
 	}
 
 	port := os.Getenv("PORT")
 	dbUrl := os.Getenv("DB_URL")
-	secretKey := os.Getenv("SECRET_KEY")
 	platform := os.Getenv("PLATFORM")
+	secretKey := os.Getenv("SECRET_KEY")
+	issuer := os.Getenv("ISSUER")
+	audience := os.Getenv("AUDIENCE")
 
 	cfg.Port = port
 	cfg.DbUrl = dbUrl
 	cfg.SecretKey = secretKey
 	cfg.Platform = platform
+	cfg.Issuer = issuer
+	cfg.Audience = audience
 
 	return nil
 }
 
-func (cfg *ApiConfig) LoadDatabase() error {
-	db, err := pgx.Connect(context.Background(), cfg.DbUrl)
+func (cfg *ApiConfig) LoadDatabase() (*sql.DB, error) {
+	db, err := sql.Open("pgx", cfg.DbUrl)
+
 	if err != nil {
-		return err
+		return nil, err
 	}
 	dbQueries := database.New(db)
 
 	cfg.Queries = *dbQueries
 
-	return nil
+	return db, nil
 }

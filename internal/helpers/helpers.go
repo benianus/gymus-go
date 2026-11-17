@@ -1,35 +1,34 @@
 package helpers
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
+	"log"
 	"net/http"
+
+	"github.com/benianus/gymus-go/internal/dtos"
 )
 
-type ErrorResponse struct {
-	ErrorMessage string `json:"error_message"`
-}
-
-func ResponseWithJson(w http.ResponseWriter, code int, payload any) {
-	response, err := json.Marshal(&payload)
-	if err != nil {
-		return
+func ResponseWithJson[T any](w http.ResponseWriter, code int, payload *T) {
+	succesRes := dtos.Success[T]{
+		Data: payload,
 	}
 	w.Header().Set("Contnet-type", "application/json")
 	w.WriteHeader(code)
-	w.Write(response)
-}
-
-func ResponseWithError(w http.ResponseWriter, code int, msg string) {
-	errorResponse := ErrorResponse{
-		ErrorMessage: msg,
-	}
-
-	response, err := json.Marshal(&errorResponse)
-	if err != nil {
+	if err := json.MarshalWrite(w, &succesRes); err != nil {
+		log.Println(err)
 		return
 	}
+}
+
+func ResponseWithError[T any](w http.ResponseWriter, code int, msg *dtos.ErrorResponseDto[T]) {
 	w.Header().Set("Contnet-type", "application/json")
 	w.WriteHeader(code)
-	w.Write(response)
+	errorResponse := dtos.Error[dtos.ErrorResponseDto[T]]{
+		Error: msg,
+	}
 
+	if err := json.MarshalWrite(w, &errorResponse); err != nil {
+		log.Println(err)
+		return
+	}
 }

@@ -10,9 +10,9 @@ type MembershipRouter struct {
 	*handlers.MembershipHandler
 }
 
-func NewMembershipRouter(handler *handlers.MembershipHandler) *MembershipRouter {
+func NewMembershipRouter(h *handlers.MembershipHandler) *MembershipRouter {
 	return &MembershipRouter{
-		MembershipHandler: handler,
+		MembershipHandler: h,
 	}
 }
 

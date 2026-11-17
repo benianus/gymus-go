@@ -13,17 +13,17 @@ import (
 	"github.com/google/uuid"
 )
 
-// hashpassword
+// hash password
 func HashPassword(password string) (string, error) {
 	return argon2id.CreateHash(password, argon2id.DefaultParams)
 }
 
-// checkhashepassword
+// check hash password
 func CheckPasswordHash(password, hash string) (bool, error) {
 	return argon2id.ComparePasswordAndHash(password, hash)
 }
 
-// makejwt
+// make jwt
 func MakeJwt(userId uuid.UUID, tokenSecret string, expiresAt time.Duration) (string, error) {
 	jwtToken := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
@@ -38,7 +38,7 @@ func MakeJwt(userId uuid.UUID, tokenSecret string, expiresAt time.Duration) (str
 	return jwtToken.SignedString([]byte(tokenSecret))
 }
 
-// validatejwt
+// validate jwt
 func ValidateJwt(tokenString string, tokenSecret string) (uuid.UUID, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(t *jwt.Token) (any, error) {
 		return []byte(tokenSecret), nil
@@ -55,7 +55,7 @@ func ValidateJwt(tokenString string, tokenSecret string) (uuid.UUID, error) {
 	return uuid.MustParse(userId), nil
 }
 
-// getBearerToken
+// get Bearer Token
 func GetBearerToken(header *http.Header) (string, error) {
 	authHeader := header.Get("authorization")
 	if len(authHeader) == 0 {
@@ -76,7 +76,7 @@ func GetBearerToken(header *http.Header) (string, error) {
 	return token, nil
 }
 
-// makerefreshtoken
+// make refresh token
 func MakeRefreshToken() (string, error) {
 	key := make([]byte, 32)
 	_, err := rand.Read(key)
