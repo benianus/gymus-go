@@ -8,7 +8,7 @@ import (
 	"github.com/benianus/gymus-go/internal/dtos"
 )
 
-func ResponseWithJson[T any](w http.ResponseWriter, code int, payload *T) {
+func ResponseWithJson[T any](w http.ResponseWriter, code int, payload T) {
 	succesRes := dtos.Success[T]{
 		Data: payload,
 	}
@@ -20,7 +20,7 @@ func ResponseWithJson[T any](w http.ResponseWriter, code int, payload *T) {
 	}
 }
 
-func ResponseWithError[T any](w http.ResponseWriter, code int, msg *dtos.ErrorResponseDto[T]) {
+func ResponseWithError[T any](w http.ResponseWriter, code int, msg dtos.ErrorResponseDto[T]) {
 	w.Header().Set("Contnet-type", "application/json")
 	w.WriteHeader(code)
 	errorResponse := dtos.Error[dtos.ErrorResponseDto[T]]{

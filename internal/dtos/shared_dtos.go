@@ -11,11 +11,11 @@ type PagedResponse[T any] struct {
 }
 
 type Success[T any] struct {
-	Data *T `json:"data"`
+	Data T `json:"data"`
 }
 
 type Error[T any] struct {
-	Error *T `json:"error"`
+	Error T `json:"error"`
 }
 
 type ErrorResponseDto[T any] struct {

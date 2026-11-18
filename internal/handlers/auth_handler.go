@@ -25,53 +25,7 @@ func (h *AuthHandler) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 	var reqDto dtos.LoginRequestDto
 	if err := json.UnmarshalRead(r.Body, &reqDto); err != nil {
 		log.Println(err)
-		helpers.ResponseWithError(w, http.StatusBadRequest, &dtos.ErrorResponseDto[string]{
-			Message: err.Error(),
-		})
-		return
-	}
-	defer r.Body.Close()
-
-	// validate the request
-
-	if reqDto.Username == "" || len(reqDto.Username) == 0 {
-		helpers.ResponseWithError(w, http.StatusBadRequest, &dtos.ErrorResponseDto[string]{
-			Message: "username should not be empty or blank!!",
-		})
-		return
-	}
-
-	if reqDto.Password == "" || len(reqDto.Password) == 0 {
-		helpers.ResponseWithError(w, http.StatusBadRequest, &dtos.ErrorResponseDto[string]{
-			Message: "password is required",
-		})
-		return
-	}
-
-	res, err := h.Login(reqDto)
-	if err != nil {
-		log.Println(err)
-		helpers.ResponseWithError(w, http.StatusBadRequest, &dtos.ErrorResponseDto[string]{
-			Message: err.Error(),
-		})
-		return
-	}
-
-	if err := json.MarshalWrite(w, &res); err != nil {
-		log.Println(err)
-		helpers.ResponseWithError(w, http.StatusBadRequest, &dtos.ErrorResponseDto[string]{
-			Message: err.Error(),
-		})
-		return
-	}
-}
-
-func (h *AuthHandler) HandlerRegister(w http.ResponseWriter, r *http.Request) {
-	// decoding the requst to an object
-	var reqDto dtos.RegisterRequestDto
-	if err := json.UnmarshalRead(r.Body, &reqDto); err != nil {
-		log.Println(err)
-		helpers.ResponseWithError(w, http.StatusBadRequest, &dtos.ErrorResponseDto[string]{
+		helpers.ResponseWithError(w, http.StatusBadRequest, dtos.ErrorResponseDto[string]{
 			Message: err.Error(),
 		})
 		return
@@ -81,7 +35,46 @@ func (h *AuthHandler) HandlerRegister(w http.ResponseWriter, r *http.Request) {
 	// validate the request
 	if err := h.Validate.Struct(reqDto); err != nil {
 		log.Println(err)
-		helpers.ResponseWithError(w, http.StatusBadRequest, &dtos.ErrorResponseDto[string]{
+		helpers.ResponseWithError(w, http.StatusBadRequest, dtos.ErrorResponseDto[string]{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// login service logic
+	authRes, err := h.Login(reqDto, r.Context())
+	if err != nil {
+		log.Println(err)
+		helpers.ResponseWithError(w, http.StatusBadRequest, dtos.ErrorResponseDto[string]{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// return json response to the client
+	helpers.ResponseWithJson(w, http.StatusOK, authRes)
+}
+
+func (h *AuthHandler) HandlerRegister(w http.ResponseWriter, r *http.Request) {
+	// decoding the requst to an object
+	var reqDto dtos.RegisterRequestDto
+	if err := json.UnmarshalRead(r.Body, &reqDto); err != nil {
+		log.Println(err)
+		helpers.ResponseWithError(
+			w,
+			http.StatusBadRequest,
+			dtos.ErrorResponseDto[string]{
+				Message: err.Error(),
+			},
+		)
+		return
+	}
+	defer r.Body.Close()
+
+	// validate the request
+	if err := h.Validate.Struct(reqDto); err != nil {
+		log.Println(err)
+		helpers.ResponseWithError(w, http.StatusBadRequest, dtos.ErrorResponseDto[string]{
 			Message: "password should not be empty or blank!",
 		})
 		return
@@ -91,7 +84,7 @@ func (h *AuthHandler) HandlerRegister(w http.ResponseWriter, r *http.Request) {
 	authRes, err := h.Register(reqDto, r.Context())
 	if err != nil {
 		log.Println(err)
-		helpers.ResponseWithError(w, http.StatusBadRequest, &dtos.ErrorResponseDto[string]{
+		helpers.ResponseWithError(w, http.StatusBadRequest, dtos.ErrorResponseDto[string]{
 			Message: err.Error(),
 		})
 		return
@@ -101,6 +94,92 @@ func (h *AuthHandler) HandlerRegister(w http.ResponseWriter, r *http.Request) {
 	helpers.ResponseWithJson(w, http.StatusCreated, authRes)
 }
 
-func (h *AuthHandler) HandlerRefresh(w http.ResponseWriter, r *http.Request) {}
+func (h *AuthHandler) HandlerRefresh(w http.ResponseWriter, r *http.Request) {
+	// deserialization
+	var reqDto dtos.RefreshRequestDto
+	if err := json.UnmarshalRead(r.Body, &reqDto); err != nil {
+		log.Println(err)
+		helpers.ResponseWithError(
+			w,
+			http.StatusBadRequest,
+			dtos.ErrorResponseDto[string]{
+				Message: err.Error(),
+			},
+		)
+		return
+	}
+	defer r.Body.Close()
 
-func (h *AuthHandler) HandlerLogout(w http.ResponseWriter, r *http.Request) {}
+	// validation
+	if err := h.Validate.Struct(reqDto); err != nil {
+		log.Println(err)
+		helpers.ResponseWithError(w, http.StatusBadRequest, dtos.ErrorResponseDto[string]{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// logic
+	refResDto, err := h.Refresh(reqDto, r.Context())
+	if err != nil {
+		log.Println(err)
+		helpers.ResponseWithError(w, http.StatusInternalServerError, dtos.ErrorResponseDto[string]{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	//  response
+	helpers.ResponseWithJson(w, http.StatusOK, refResDto)
+}
+
+func (h *AuthHandler) HandlerLogout(w http.ResponseWriter, r *http.Request) {
+	// request decoding
+	var reqDto dtos.LogoutRequestDto
+	if err := json.UnmarshalRead(r.Body, &reqDto); err != nil {
+		log.Println(err)
+		helpers.ResponseWithError(
+			w,
+			http.StatusInternalServerError,
+			dtos.ErrorResponseDto[string]{
+				Message: err.Error(),
+			},
+		)
+		return
+	}
+	defer r.Body.Close()
+
+	// request validation
+	if err := h.Validate.Struct(reqDto); err != nil {
+		log.Println(err)
+		helpers.ResponseWithError(
+			w,
+			http.StatusInternalServerError,
+			dtos.ErrorResponseDto[string]{
+				Message: err.Error(),
+			},
+		)
+		return
+	}
+
+	// logic to the service layer
+	_, err := h.Logout(reqDto, r.Context())
+	if err != nil {
+		log.Println(err)
+		helpers.ResponseWithError(
+			w,
+			http.StatusInternalServerError,
+			dtos.ErrorResponseDto[string]{
+				Message: err.Error(),
+			},
+		)
+		return
+	}
+
+	// json response
+	helpers.ResponseWithJson(
+		w,
+		http.StatusNoContent,
+		helpers.LOGOUT_MESSAGE,
+	)
+}
